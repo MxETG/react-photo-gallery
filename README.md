@@ -1,3 +1,16 @@
+# Shopify Project: Photo Repo
+This shopify project is based on the react-photo-gallery template.
+Features added:
+1. Upload images.
+2. Search images based on images' characteristics.
+
+Other features that can be added:
+1. Delete exisiting images.
+2. Introduce user/login system to do the access control.
+3. Multiple images uploading.
+4. Search similar images.
+
+
 # React Photo Gallery
 
 [![Join the chat at https://gitter.im/react-photo-gallery/Lobby](https://badges.gitter.im/react-photo-gallery/Lobby.svg)](https://gitter.im/react-photo-gallery/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
