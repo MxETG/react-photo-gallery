@@ -9,13 +9,8 @@ const backendUrl = "http://127.0.0.1:3000/";
 const uploadUrl = "upload-image";
 const getAllUrl = "all-images";
 const searchUrl = "search";
+// const imageFolderUrl = "http://127.0.0.1:8887/"
 const imageFolderUrl = "http://127.0.0.1:8887/"
-
-function getMeta(url, callback) {
-  var img = new Image();
-  img.src = url;
-  img.onload = function () { callback(this.width, this.height); }
-}
 
 const toBase64 = file => new Promise((resolve, reject) => {
   const reader = new FileReader();
@@ -106,6 +101,11 @@ class App extends React.Component {
       };
       fetch(backendUrl + uploadUrl, requestOptions)
         .then(response => response.json())
+        .then(data => {
+          this.setState({ searchText: ''}, () => {
+            this.loadAllPhotos();
+          })
+        })
     });
   }
 
