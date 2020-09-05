@@ -1,3 +1,5 @@
+// To be combined with dynamic loading
+
 import React, { useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import Gallery from 'react-photo-gallery';

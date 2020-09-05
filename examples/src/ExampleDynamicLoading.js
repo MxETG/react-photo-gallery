@@ -1,3 +1,5 @@
+// To be combined with light box pattern
+
 import React, { useState, useEffect } from "react";
 import Gallery from "react-photo-gallery";
 import { debounce } from "./utils";

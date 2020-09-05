@@ -1,59 +1,111 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import jsonp from 'jsonp';
-import ExampleBasic from './ExampleBasic';
-import ExampleWithLightbox from './ExampleWithLightbox';
-import ExampleCustomComponentSelection from './ExampleCustomComponentSelection';
-import ExampleSortable from './ExampleSortable';
-import ExampleDynamicLoading from './ExampleDynamicLoading';
-import ExampleDynamicColumns from './ExampleDynamicColumns';
+import ImageSection from './ImageSection';
+import SearchField from "react-search-field";
+import ImageUploader from 'react-images-upload';
+import axios from 'axios'
+
+const backendUrl = "http://127.0.0.1:3000/";
+const uploadUrl = "upload-image";
+const getAllUrl = "all-images";
+const searchUrl = "search";
+const imageFolderUrl = "http://127.0.0.1:8887/"
+
+function getMeta(url, callback) {
+  var img = new Image();
+  img.src = url;
+  img.onload = function () { callback(this.width, this.height); }
+}
+
+const toBase64 = file => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = error => reject(error);
+});
 
 class App extends React.Component {
   constructor() {
     super();
-    this.state = { width: -1 };
-    this.loadPhotos = this.loadPhotos.bind(this);
+    this.state = { width: -1, search: '' };
+    this.loadAllPhotos = this.loadAllPhotos.bind(this);
+    this.searchTextChange = this.searchTextChange.bind(this);
+    this.upload = this.upload.bind(this);
+    this.searchPhoto = this.searchPhoto.bind(this);
   }
+
   componentDidMount() {
-    this.loadPhotos();
+    this.loadAllPhotos();
   }
-  loadPhotos() {
-    const urlParams = {
-      api_key: '455b5e2fa6b951f9b9ab58a86d5e1f8a',
-      photoset_id: '72157708141247864',
-      user_id: '146659101@N08',
-      format: 'json',
-      per_page: '120',
-      extras: 'url_m,url_c,url_l,url_h,url_o',
+
+  loadAllPhotos() {
+    const requestOptions = {
+      method: 'GET'
     };
+    fetch(backendUrl + getAllUrl, requestOptions)
+      .then(response => response.json())
+      .then(data => {
+        const imagesData = data.rows;
+        let photos = [];
+        for (let i = 0; i < imagesData.length; i++) {
+          photos[i] = {
+            src: imageFolderUrl + imagesData[i].id.split(':')[1] + '.jpg',
+            width: imagesData[i].doc.width,
+            height: imagesData[i].doc.height
+          }
+        }
+        console.log(photos)
+        this.setState({
+          photos: photos
+        });
+      })
+  }
 
-    let url = 'https://api.flickr.com/services/rest/?method=flickr.photosets.getPhotos';
-    url = Object.keys(urlParams).reduce((acc, item) => {
-      return acc + '&' + item + '=' + urlParams[item];
-    }, url);
+  searchTextChange(e) {
+    this.setState({ search: e }, () => {
+      console.log(this.state);
+    })
+  }
 
-    jsonp(url, { name: 'jsonFlickrApi' }, (err, data) => {
-      let photos = data.photoset.photo.map(item => {
-        let aspectRatio = parseFloat(item.width_o / item.height_o);
-        return {
-          src: item.url_l,
-          width: parseInt(item.width_o),
-          height: parseInt(item.height_o),
-          title: item.title,
-          alt: item.title,
-          key: item.id,
-          srcSet: [
-            `${item.url_m} ${item.width_m}w`,
-            `${item.url_c} ${item.width_c}w`,
-            `${item.url_l} ${item.width_l}w`,
-            `${item.url_h} ${item.width_h}w`,
-          ],
-          sizes: '(min-width: 480px) 50vw, (min-width: 1024px) 33.3vw, 100vw',
-        };
-      });
-      this.setState({
-        photos: this.state.photos ? this.state.photos.concat(photos) : photos,
-      });
+  searchPhoto() {
+    alert(this.state.search);
+    const requestOptions = {
+      method: 'GET',
+    };
+    const searchPhotoURL = backendUrl + searchUrl + "?searchText=" + this.state.search;
+    fetch(searchPhotoURL, requestOptions)
+      .then(response => response.json())
+      .then(data => {
+        const imagesData = data.docs;
+        console.log(imagesData);
+        let photos = [];
+        for (let i = 0; i < imagesData.length; i++) {
+          photos[i] = {
+            src: imageFolderUrl + imagesData[i]._id.split(':')[1] + '.jpg',
+            width: imagesData[i].width,
+            height: imagesData[i].height
+          }
+        }
+        console.log(photos)
+        this.setState({
+          photos: photos,
+        });
+      })
+  }
+
+  // Send image(base64 encode) to backend server.
+  upload(picture) {
+    let pic = picture[0];
+    let picEncode;
+    toBase64(pic).then((res) => {
+      picEncode = res;
+      const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: picEncode })
+      };
+      fetch(backendUrl + uploadUrl, requestOptions)
+        .then(response => response.json())
     });
   }
 
@@ -62,13 +114,25 @@ class App extends React.Component {
       const width = this.state.width;
       return (
         <div className="App">
-          <ExampleBasic title={'Basic Row Layout'} photos={this.state.photos.slice(0, 20)} />
-          <ExampleBasic title={'Basic Column Layout'} direction="column" photos={this.state.photos.slice(40, 60)} />
-          <ExampleWithLightbox photos={this.state.photos.slice(60, 75)} />
-          <ExampleCustomComponentSelection photos={this.state.photos.slice(75, 90)} />
-          <ExampleSortable photos={this.state.photos.slice(90, 100)} />
-          <ExampleDynamicColumns title={'Custom Dynamic Columns'} photos={this.state.photos.slice(100, 120)} />
-          <ExampleDynamicLoading photos={this.state.photos} />
+          <div>
+            <SearchField
+              placeholder="Search Photo..."
+              searchText=""
+              onChange={this.searchTextChange}
+              classNames="test-class"
+              onSearchClick={this.searchPhoto}
+            />
+          </div>
+          <ImageSection photos={this.state.photos} />
+          <ImageUploader
+            withIcon={true}
+            buttonText='Choose images'
+            onChange={this.upload}
+            imgExtension={['.jpg']}
+            label='Max file size: 5mb, accepted: jpg'
+            maxFileSize={5242880}
+            singleImage={true}
+          />
         </div>
       );
     } else {
