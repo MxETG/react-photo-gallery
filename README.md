@@ -1,4 +1,6 @@
-# Shopify Project: Photo Repo
+# Shopify Project: Image Repo
+Project link: http://104.154.66.126:8000/ (domain not set up).
+
 This shopify project is based on the react-photo-gallery template.
 Features added:
 1. Upload images.
